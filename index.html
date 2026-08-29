@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guess The Word</title>
+  <link rel="icon" href="logo.jpg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <!-- Replace this div with your Binextel logo later -->
+      <div class="logo-placeholder">BinX-Club</div>
+      <span>Guess The Word</span>
+    </div>
+    <button id="theme-toggle" class="theme-btn">🌙</button>
+  </header>
+
+  <main class="app">
+
+    <!-- SETUP -->
+    <section id="setup-screen" class="screen active">
+      <div class="card setup-card">
+        <h1 id="app-title">Guess The Word</h1>
+        <p id="app-subtitle" class="subtitle">Two players · One device · The word is picked for you. Take turns and collect points.</p>
+
+        <div class="players-grid">
+          <label>
+            <span id="player1-label">Player 1</span>
+            <input id="player1-name" type="text" placeholder="Lama" value="" maxlength="20">
+          </label>
+
+          <label>
+            <span id="player2-label">Player 2</span>
+            <input id="player2-name" type="text" placeholder="Laith" value="" maxlength="20">
+          </label>
+        </div>
+
+        <div class="options-grid">
+          <div class="option-group">
+            <span id="language-label">Language</span>
+            <div class="lang-toggle" id="lang-toggle">
+              <button type="button" class="lang-btn active" data-lang="en">English</button>
+              <button type="button" class="lang-btn" data-lang="ar">العربية</button>
+            </div>
+          </div>
+
+          <div class="option-group">
+            <span id="category-label">Category</span>
+            <div class="select-wrap">
+              <select id="category-select"></select>
+            </div>
+          </div>
+        </div>
+
+        <div class="option-group timer-group">
+          <span id="timer-label">Timer</span>
+          <div class="timer-row">
+            <label class="switch">
+              <input type="checkbox" id="timer-toggle">
+              <span class="slider"></span>
+            </label>
+            <span id="timer-enable-text" class="timer-enable-text">Enable turn timer</span>
+            <div class="select-wrap timer-select-wrap">
+              <select id="timer-duration" disabled>
+                <option value="15">15s</option>
+                <option value="30" selected>30s</option>
+                <option value="45">45s</option>
+                <option value="60">60s</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button id="start-btn" class="primary-btn">Start Game</button>
+      </div>
+    </section>
+
+    <!-- GUESSING -->
+    <section id="game-screen" class="screen">
+
+      <div class="scoreboard card">
+        <div id="score-card-1" class="player-score">
+          <span id="name-1">Lama</span>
+          <strong id="score-1">0</strong>
+        </div>
+
+        <div class="round-info">
+          <span id="turn-label">Turn</span>
+          <strong id="turn-number">1</strong>
+        </div>
+
+        <div id="score-card-2" class="player-score">
+          <span id="name-2">Laith</span>
+          <strong id="score-2">0</strong>
+        </div>
+      </div>
+
+      <div class="card game-card">
+        <div class="badges-row">
+          <div id="guess-turn" class="turn-badge"></div>
+          <div id="category-badge" class="category-badge"></div>
+          <div id="timer-display" class="timer-badge"></div>
+        </div>
+
+        <h2 id="guess-heading">Guess The Word</h2>
+        <p id="word-length-text" class="subtitle"></p>
+
+        <div id="guess-inputs" class="guess-inputs"></div>
+
+        <button id="guess-btn" class="primary-btn">Check Guess</button>
+
+        <p id="game-message" class="message"></p>
+
+        <button id="end-game-btn" class="end-btn" type="button">End Game</button>
+
+        <div class="legend">
+          <div>
+            <span class="legend-color green"></span>
+            <span id="legend-green-text">Green: correct letter + correct position</span>
+            <b>+10</b>
+          </div>
+
+          <div>
+            <span class="legend-color orange"></span>
+            <span id="legend-orange-text">Orange: correct letter + wrong position</span>
+            <b>+5</b>
+          </div>
+
+          <div>
+            <span class="legend-color gray"></span>
+            <span id="legend-gray-text">Gray: wrong letter</span>
+            <b>+0</b>
+          </div>
+
+          <div class="bonus">
+            <span id="legend-bonus-text">🎯 Guess the whole word correctly</span>
+            <b>+20</b>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULT -->
+    <section id="result-screen" class="screen">
+      <div class="card result-card">
+        <div class="winner-icon">🏆</div>
+
+        <h1 id="winner-title"></h1>
+        <p id="winner-message"></p>
+
+        <div class="final-scores">
+          <div>
+            <span id="final-name-1"></span>
+            <strong id="final-score-1">0</strong>
+          </div>
+
+          <div>
+            <span id="final-name-2"></span>
+            <strong id="final-score-2">0</strong>
+          </div>
+        </div>
+
+        <button id="new-game-btn" class="primary-btn">
+          Play Again
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
