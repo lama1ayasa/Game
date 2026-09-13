@@ -172,6 +172,9 @@ let secretWord = "";
 let turnNumber = 1;
 let gameOver = false;
 
+// تتبع الحروف المثبتة (الأخضر)
+let lockedLetters = [];
+
 let timerEnabled = false;
 let timerDuration = 30;
 let timerInterval = null;
@@ -239,10 +242,6 @@ function applyLanguage(lang) {
   document.documentElement.lang = lang;
 }
 
-/*
-  LANGUAGE TOGGLE (updates the whole app immediately,
-  even before the game starts)
-*/
 langToggle.addEventListener("click", event => {
   const btn = event.target.closest(".lang-btn");
   if (!btn) return;
@@ -254,18 +253,10 @@ langToggle.addEventListener("click", event => {
   applyLanguage(gameLanguage);
 });
 
-/*
-  TIMER TOGGLE
-*/
 timerToggle.addEventListener("change", () => {
   timerDurationSelect.disabled = !timerToggle.checked;
 });
 
-/*
-  Start:
-  A random word is chosen from the selected
-  language + category. Player 1 guesses first.
-*/
 startBtn.addEventListener("click", () => {
   players[0].name = cleanName(player1Input.value, "Player 1");
   players[1].name = cleanName(player2Input.value, "Player 2");
@@ -275,6 +266,9 @@ startBtn.addEventListener("click", () => {
 
   gameCategory = categorySelect.value;
   secretWord = pickRandomWord(gameLanguage, gameCategory);
+
+  // تصفير الحروف المثبتة عند بدء لعبة جديدة
+  lockedLetters = Array(secretWord.length).fill(null);
 
   timerEnabled = timerToggle.checked;
   timerDuration = parseInt(timerDurationSelect.value, 10);
@@ -328,21 +322,51 @@ function createGuessInputs() {
     input.autocomplete = "off";
     input.dataset.index = i;
 
+    // إذا كان الحرف مثبتًا مسبقًا (أخضر)، يتم طباعته وقفله
+    if (lockedLetters[i]) {
+      input.value = lockedLetters[i];
+      input.classList.add("green");
+      input.readOnly = true;
+    }
+
     input.addEventListener("input", () => {
+      // منع التعديل إذا كان مسبقاً مثبت
+      if (lockedLetters[i]) {
+        input.value = lockedLetters[i];
+        return;
+      }
+
       input.value = sanitizeChar(input.value);
 
       if (input.value && i < secretWord.length - 1) {
-        guessInputs.children[i + 1].focus();
+        // الانتقال للخانة القادمة التي ليست مقفلة
+        let nextIndex = i + 1;
+        while (nextIndex < secretWord.length && lockedLetters[nextIndex]) {
+          nextIndex++;
+        }
+        if (nextIndex < secretWord.length) {
+          guessInputs.children[nextIndex].focus();
+        }
       }
     });
 
     input.addEventListener("keydown", event => {
-      if (
-        event.key === "Backspace" &&
-        !input.value &&
-        i > 0
-      ) {
-        guessInputs.children[i - 1].focus();
+      if (event.key === "Backspace") {
+        if (lockedLetters[i]) {
+          event.preventDefault();
+          return;
+        }
+
+        if (!input.value && i > 0) {
+          // الرجوع للخانة السابقة غير المقفلة
+          let prevIndex = i - 1;
+          while (prevIndex >= 0 && lockedLetters[prevIndex]) {
+            prevIndex--;
+          }
+          if (prevIndex >= 0) {
+            guessInputs.children[prevIndex].focus();
+          }
+        }
       }
 
       if (event.key === "Enter") {
@@ -353,8 +377,10 @@ function createGuessInputs() {
     guessInputs.appendChild(input);
   }
 
-  if (guessInputs.firstElementChild) {
-    guessInputs.firstElementChild.focus();
+  // تركيز الفوكس على أول حقل غير مقفل
+  const firstEditable = Array.from(guessInputs.children).find((inp, idx) => !lockedLetters[idx]);
+  if (firstEditable) {
+    firstEditable.focus();
   }
 }
 
@@ -391,10 +417,6 @@ function checkGuess() {
 
   players[guesserIndex].score += points;
 
-  /*
-    Correct whole word:
-    normal letter points + 20 bonus.
-  */
   if (guess === secretWord) {
     players[guesserIndex].score += 20;
 
@@ -420,11 +442,6 @@ function checkGuess() {
   gameMessage.style.color =
     points > 0 ? "#1769e0" : "#87909b";
 
-  /*
-    After each unsuccessful guess,
-    the SAME secret word stays active
-    and the other player gets the next turn.
-  */
   stopTimer();
   setTimeout(switchGuesser, 1100);
 }
@@ -438,6 +455,8 @@ function evaluateGuess(guess, word) {
     if (guess[i] === word[i]) {
       result[i] = "green";
       remaining[i] = null;
+      // تثبيت الحرف في مكان الصحيح دائماً
+      lockedLetters[i] = guess[i];
     }
   }
 
@@ -457,8 +476,7 @@ function evaluateGuess(guess, word) {
 }
 
 function applyColors(result) {
-  const inputs =
-    document.querySelectorAll(".letter-input");
+  const inputs = document.querySelectorAll(".letter-input");
 
   inputs.forEach((input, index) => {
     input.classList.remove("green", "orange", "gray");
@@ -478,7 +496,6 @@ function disableInputs() {
 function switchGuesser() {
   if (gameOver) return;
 
-  // Switch only the guessing player.
   guesserIndex = guesserIndex === 0 ? 1 : 0;
 
   turnNumber++;
@@ -580,11 +597,6 @@ function updateScores() {
   );
 }
 
-/*
-  END GAME (manual):
-  Lets players stop the match at any point.
-  Whoever has the higher score at that moment wins.
-*/
 endGameBtn.addEventListener("click", () => {
   const t = STR[gameLanguage];
 
@@ -610,13 +622,16 @@ newGameBtn.addEventListener("click", () => {
   guesserIndex = 0;
   turnNumber = 1;
   gameOver = false;
+  
+  // تصفير الحروف المثبتة عند الرجوع للقائمة الرئيسية
+  lockedLetters = [];
 
   applyLanguage(gameLanguage);
   showScreen(setupScreen);
 });
 
 /*
-  DARK / LIGHT MODE
+   DARK / LIGHT MODE
 */
 themeToggle.addEventListener("click", () => {
   const current =
